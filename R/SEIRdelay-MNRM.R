@@ -88,7 +88,7 @@ SEIRdelay_MNRM <- function(tmax,S0,I0,beta,nu,tau,verbose=T,maxsize=1e6){
 
     if(verbose){
       if((i %% 100) == 0){
-        cat(" --- simulated ",i-1," reactions at time ",t," --- \n")
+        cat(" --- simulated ",i," reactions at time ",t," --- \n")
       }
     }
 
@@ -131,6 +131,8 @@ SEIRdelay_MNRM <- function(tmax,S0,I0,beta,nu,tau,verbose=T,maxsize=1e6){
       # update 2nd to last place of s_mu
       sk[[mu]] <- append(x = sk[[mu]],values = t + tau,after = length(sk[[mu]])-1)
 
+    } else {
+      stop(" --- error: mu ",mu," completion ",completion," --- \n")
     }
 
     # 11. update Tk
@@ -152,7 +154,7 @@ SEIRdelay_MNRM <- function(tmax,S0,I0,beta,nu,tau,verbose=T,maxsize=1e6){
       return(out[-which(is.nan(out[,1])),])
     }
     if(all(fequal(ak,0)) & all(is.infinite(unlist(sk)))){
-      cat(" --- warning: all propentities approximately zero and no delayed reactions queued up, returning output early --- \n")
+      cat(" --- warning: all propensities approximately zero and no delayed reactions queued up, returning output early --- \n")
       return(out[-which(is.nan(out[,1])),])
     }
     if(i > nrow(out)){
