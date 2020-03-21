@@ -37,15 +37,20 @@ fequal <- function(x,y,tol=sqrt(.Machine$double.eps)){
 
 #' SEIR model with fixed delay via Modified Next Reaction Method (**C** version)
 #'
+#' Using the Modified Next Reaction Method (MNRM) for delays, simulate a SEIR
+#' model where the time spent in the E compartment is a deterministic period of
+#' length \code{tau}.
 #'
+#' The MNRM is described in: Anderson, D. F. (2007). *A modified next reaction method for simulating chemical systems with time dependent propensities and delays.* Journal of Chemical Physics, 127(21). \url{https://doi.org/10.1063/1.2799998}
 #'
-#' @param tmax
-#' @param S0
-#' @param I0
-#' @param beta
-#' @param nu
+#' @param tmax maximum time of simulation
+#' @param S0 initial number of susceptibles
+#' @param I0 initial number of infectives
+#' @param beta effective contact rate
+#' @param nu duration of infectiousness
 #' @param tau duration of latent period fixed delay
 #' @param verbose print diagnostic information
+#' @param maxsize maximum size of output matrix; simulation will return early if this is exceeded
 #'
 #' @useDynLib delay SEIRdelay_MNRM_Cinternal
 #'
@@ -74,15 +79,20 @@ SEIRdelay_MNRM_C <- function(tmax,S0,I0,beta,nu,tau,verbose=T,maxsize=1e6){
 
 #' SEIR model with fixed delay via Modified Next Reaction Method (**R** version)
 #'
+#' Using the Modified Next Reaction Method (MNRM) for delays, simulate a SEIR
+#' model where the time spent in the E compartment is a deterministic period of
+#' length \code{tau}.
 #'
+#' The MNRM is described in: Anderson, D. F. (2007). *A modified next reaction method for simulating chemical systems with time dependent propensities and delays.* Journal of Chemical Physics, 127(21). \url{https://doi.org/10.1063/1.2799998}
 #'
-#' @param tmax
-#' @param S0
-#' @param I0
-#' @param beta
-#' @param nu
+#' @param tmax maximum time of simulation
+#' @param S0 initial number of susceptibles
+#' @param I0 initial number of infectives
+#' @param beta effective contact rate
+#' @param nu duration of infectiousness
 #' @param tau duration of latent period fixed delay
 #' @param verbose print diagnostic information
+#' @param maxsize maximum size of output matrix; simulation will return early if this is exceeded
 #'
 #' @examples
 #'  \dontrun{

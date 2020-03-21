@@ -56,7 +56,6 @@ SEXP SEIRdelay_MNRM_Cinternal(
 
   double t = 0.;
 
-
   int out_size = 1E4;
   int out_i = 0;
 
@@ -94,8 +93,6 @@ SEXP SEIRdelay_MNRM_Cinternal(
   ak[0] = beta*(double)X[0]*(double)X[2];
   ak[1] = nu*(double)X[2];
 
-  // Rprintf(" --- initial propensities ak[0]: %f, ak[1]: %f --- \n",ak[0],ak[1]);
-
   // 3. draw internal jump times
   Pk[0] = log(1./runif(0.,1.));
   Pk[1] = log(1./runif(0.,1.));
@@ -116,8 +113,6 @@ SEXP SEIRdelay_MNRM_Cinternal(
         Rprintf(" --- simulated %d reactions at time %f --- \n",out_i,t);
       }
     }
-
-    // Rprintf(" --- sim loop %d, time: %f --- \n",out_i,t);
 
     // 4. set absolute times to fire
     delta_t[0] = (Pk[0] - Tk[0]) / ak[0];
@@ -192,15 +187,12 @@ SEXP SEIRdelay_MNRM_Cinternal(
     ak[0] = beta*(double)X[0]*(double)X[2];
     ak[1] = nu*(double)X[2];
 
-    // Rprintf(" --- current propensities ak[0]: %f, ak[1]: %f --- \n",ak[0],ak[1]);
-
     // store output
     t_out[out_i] = t;
     S_out[out_i] = X[0];
     E_out[out_i] = X[1];
     I_out[out_i] = X[2];
     R_out[out_i] = X[3];
-    // Rprintf(" --- state vector: S %d, E %d, I %d, R %d --- \n",X[0],X[1],X[2],X[3]);
     out_i += 1;
 
     // various conditions to return early

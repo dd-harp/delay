@@ -7,12 +7,29 @@
 SEIRdelay_MNRM_C(tmax, S0, I0, beta, nu, tau, verbose = T, maxsize = 1e+06)
 }
 \arguments{
+\item{tmax}{maximum time of simulation}
+
+\item{S0}{initial number of susceptibles}
+
+\item{I0}{initial number of infectives}
+
+\item{beta}{effective contact rate}
+
+\item{nu}{duration of infectiousness}
+
 \item{tau}{duration of latent period fixed delay}
 
 \item{verbose}{print diagnostic information}
+
+\item{maxsize}{maximum size of output matrix; simulation will return early if this is exceeded}
 }
 \description{
-SEIR model with fixed delay via Modified Next Reaction Method (\strong{C} version)
+Using the Modified Next Reaction Method (MNRM) for delays, simulate a SEIR
+model where the time spent in the E compartment is a deterministic period of
+length \code{tau}.
+}
+\details{
+The MNRM is described in: Anderson, D. F. (2007). \emph{A modified next reaction method for simulating chemical systems with time dependent propensities and delays.} Journal of Chemical Physics, 127(21). \url{https://doi.org/10.1063/1.2799998}
 }
 \examples{
  \dontrun{
