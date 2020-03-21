@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <R.h>
+
 #define LCHILD(x) 2 * x + 1
 #define RCHILD(x) 2 * x + 2
 #define PARENT(x) (x - 1) / 2

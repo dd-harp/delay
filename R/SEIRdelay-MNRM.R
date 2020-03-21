@@ -35,7 +35,7 @@ fequal <- function(x,y,tol=sqrt(.Machine$double.eps)){
   abs(x-y) <= tol
 }
 
-#' SEIR model with fixed delay via Modified Next Reaction Method
+#' SEIR model with fixed delay via Modified Next Reaction Method (**C** version)
 #'
 #'
 #'
@@ -47,6 +47,50 @@ fequal <- function(x,y,tol=sqrt(.Machine$double.eps)){
 #' @param tau duration of latent period fixed delay
 #' @param verbose print diagnostic information
 #'
+#' @useDynLib delay SEIRdelay_MNRM_Cinternal
+#'
+#' @examples
+#'  \dontrun{
+#'    out <- SEIRdelay_MNRM_C(tmax = 1e3,S0 = 1000,I0 = 5,beta = 0.001,nu = 1/5,tau = 10,verbose = TRUE)
+#'    outd <- discretise(out)
+#'    matplot(outd[,-1],type="l",col=c("blue","orange","red","purple"),lwd=1.5,lty=1,ylab="Count",xlab="Days")
+#'    legend(x = "topleft",pch=rep(16,4),col=c("blue","orange","red","purple"),legend=c("S","E","I","R"))
+#' }
+#' @export
+SEIRdelay_MNRM_C <- function(tmax,S0,I0,beta,nu,tau,verbose=T,maxsize=1e6){
+  out <- .Call(
+    SEIRdelay_MNRM_Cinternal,
+    as.numeric(tmax),
+    as.integer(S0),
+    as.integer(I0),
+    as.numeric(beta),
+    as.numeric(nu),
+    as.numeric(tau),
+    as.integer(as.logical(verbose)),
+    as.integer(maxsize)
+  )
+  do.call(cbind,out)
+}
+
+#' SEIR model with fixed delay via Modified Next Reaction Method (**R** version)
+#'
+#'
+#'
+#' @param tmax
+#' @param S0
+#' @param I0
+#' @param beta
+#' @param nu
+#' @param tau duration of latent period fixed delay
+#' @param verbose print diagnostic information
+#'
+#' @examples
+#'  \dontrun{
+#'    out <- SEIRdelay_MNRM(tmax = 1e3,S0 = 1000,I0 = 5,beta = 0.001,nu = 1/5,tau = 10,verbose = TRUE)
+#'    outd <- discretise(out)
+#'    matplot(outd[,-1],type="l",col=c("blue","orange","red","purple"),lwd=1.5,lty=1,ylab="Count",xlab="Days")
+#'    legend(x = "topleft",pch=rep(16,4),col=c("blue","orange","red","purple"),legend=c("S","E","I","R"))
+#' }
 #' @export
 SEIRdelay_MNRM <- function(tmax,S0,I0,beta,nu,tau,verbose=T,maxsize=1e6){
 

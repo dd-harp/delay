@@ -104,12 +104,12 @@ void insertNode(minHeap *hp, double data) {
 */
 void deleteNode(minHeap *hp) {
     if(hp->size) {
-        printf("Deleting node %f\n\n", hp->elem[0].data) ;
+        // printf("Deleting node %f\n\n", hp->elem[0].data) ;
         hp->elem[0] = hp->elem[--(hp->size)] ;
         hp->elem = realloc(hp->elem, hp->size * sizeof(node)) ;
         heapify(hp, 0) ;
     } else {
-        printf("\nMin Heap is empty!\n") ;
+        Rprintf(" --- WARNING: DELAY REACTION HEAP IS EMPTY, ERROR HAS OCCURED --- \n");
         free(hp->elem) ;
     }
 }
