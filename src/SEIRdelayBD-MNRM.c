@@ -198,7 +198,7 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
       if(j==0){
 
         X[0] -= 1;
-        X[1] -= 1;
+        X[1] += 1;
 
         insertNode(&sk[j],t + tau);
 
@@ -206,17 +206,260 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
       } else if(j==1){
 
         X[0] -= 1;
-        X[1] -= 1;
+        X[1] += 1;
 
-        double
+        // sample truncted exponential by inversion
+        double u = runif(0.,pexp(tau,1./mu,1,0));
+        double s = qexp(u,1./mu,1,0);
 
         insertNode(&sk[j],t + s);
 
+      // (recovery)
+      } else if(j==2){
+
+        X[2] -= 1;
+        X[3] += 1;
+
+      // birth
+      } else if(j==3){
+
+        X[0] += 1;
+
+      // S->0
+      } else if(j==4){
+
+        X[0] -= 1;
+
+      // I->0
+      } else if(j==5){
+
+        X[2] -= 1;
+
+      // R->0
+      } else if(j==6){
+
+        X[3] -= 1;
+
+      } else {
+        error(" --- warning, impossible combination of reaction (%d) and completion (%d), aborting simulation --- \n",j,completion);
       }
 
     }
 
+    // 11. update Tk
+    for(int i=0; i<7; i++){
+      Tk[i] += (ak[i]*Delta);
+    }
+
+    // 12. update P_mu
+    Pk[j] += log(1./runif(0.,1.));
+
+    // 13. recalculate propensities
+    double lambda = beta*(double)X[0]*(double)X[2];
+    double p_surv = exp(-mu*tau);
+    ak[0] = lambda * p_surv;            // (infection followed by completion of infectivity)
+    ak[1] = lambda * (1. - p_surv);     // (infection followed by death)
+    ak[2] = nu*(double)X[2];            // (recovery)
+    ak[3] = mu * (double)(X[0]+X[1]+X[2]+X[3]); // (birth)
+    ak[4] = mu * (double)X[0];                  // (death of S)
+    ak[5] = mu * (double)X[2];                  // (death of I)
+    ak[6] = mu * (double)X[3];                  // (death of R)
+
+    // store output
+    t_out[out_i] = t;
+    S_out[out_i] = X[0];
+    E_out[out_i] = X[1];
+    I_out[out_i] = X[2];
+    R_out[out_i] = X[3];
+    out_i += 1;
+
+    // various conditions to return early
+    if(out_i > maxsize){
+      Rprintf(" --- warning: exceeded maximum output size, returning output early --- \n");
+
+      SEXP out = PROTECT(Rf_allocVector(VECSXP,5));
+
+      SEXP t_2R = PROTECT(Rf_allocVector(REALSXP,out_i-1));
+      memmove(REAL(t_2R),t_out,(out_i-1) * sizeof(double));
+
+      SEXP S_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(S_2R),S_out,(out_i-1) * sizeof(int));
+
+      SEXP E_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(E_2R),E_out,(out_i-1) * sizeof(int));
+
+      SEXP I_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(I_2R),I_out,(out_i-1) * sizeof(int));
+
+      SEXP R_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(R_2R),R_out,(out_i-1) * sizeof(int));
+
+      SET_VECTOR_ELT(out,0,t_2R);
+      SET_VECTOR_ELT(out,1,S_2R);
+      SET_VECTOR_ELT(out,2,E_2R);
+      SET_VECTOR_ELT(out,3,I_2R);
+      SET_VECTOR_ELT(out,4,R_2R);
+
+      SEXP names = PROTECT(Rf_allocVector(STRSXP,5));
+      SET_STRING_ELT(names,0,Rf_mkChar("time"));
+      SET_STRING_ELT(names,1,Rf_mkChar("S"));
+      SET_STRING_ELT(names,2,Rf_mkChar("E"));
+      SET_STRING_ELT(names,3,Rf_mkChar("I"));
+      SET_STRING_ELT(names,4,Rf_mkChar("R"));
+
+      Rf_namesgets(out,names);
+
+      PutRNGstate();
+
+      deleteMinHeap(&sk[0]);
+      deleteMinHeap(&sk[1]);
+
+      UNPROTECT(7);
+
+      Free(t_out);
+      Free(S_out);
+      Free(E_out);
+      Free(I_out);
+      Free(R_out);
+
+      return out;
+    }
+    // check to return early
+    int all_zero = 1;
+    for(int i=0; i<7; i++){
+      if(i < 2){
+        if((ak[i] < 1.E-9) && (sk[i].elem->data == DBL_MAX)){
+          all_zero = 0;
+        }
+      } else {
+        if(ak[i] < 1.E-9){
+          all_zero = 0;
+        }
+      }
+    }
+    if(all_zero){
+      Rprintf(" --- warning: all propensities approximately zero and no delayed reactions queued up, returning output early --- \n");
+
+      SEXP out = PROTECT(Rf_allocVector(VECSXP,5));
+
+      SEXP t_2R = PROTECT(Rf_allocVector(REALSXP,out_i-1));
+      memmove(REAL(t_2R),t_out,(out_i-1) * sizeof(double));
+
+      SEXP S_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(S_2R),S_out,(out_i-1) * sizeof(int));
+
+      SEXP E_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(E_2R),E_out,(out_i-1) * sizeof(int));
+
+      SEXP I_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(I_2R),I_out,(out_i-1) * sizeof(int));
+
+      SEXP R_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+      memmove(INTEGER(R_2R),R_out,(out_i-1) * sizeof(int));
+
+      SET_VECTOR_ELT(out,0,t_2R);
+      SET_VECTOR_ELT(out,1,S_2R);
+      SET_VECTOR_ELT(out,2,E_2R);
+      SET_VECTOR_ELT(out,3,I_2R);
+      SET_VECTOR_ELT(out,4,R_2R);
+
+      SEXP names = PROTECT(Rf_allocVector(STRSXP,5));
+      SET_STRING_ELT(names,0,Rf_mkChar("time"));
+      SET_STRING_ELT(names,1,Rf_mkChar("S"));
+      SET_STRING_ELT(names,2,Rf_mkChar("E"));
+      SET_STRING_ELT(names,3,Rf_mkChar("I"));
+      SET_STRING_ELT(names,4,Rf_mkChar("R"));
+
+      Rf_namesgets(out,names);
+
+      PutRNGstate();
+
+      deleteMinHeap(&sk[0]);
+      deleteMinHeap(&sk[1]);
+
+      UNPROTECT(7);
+
+      Free(t_out);
+      Free(S_out);
+      Free(E_out);
+      Free(I_out);
+      Free(R_out);
+
+      return out;
+
+    }
+    if(out_i > out_size){
+      if(verbose){
+        Rprintf(" --- extending output memory --- \n");
+      }
+
+      int new_size = out_size+1E3;
+      if(new_size > maxsize){
+        new_size = maxsize - out_size;
+      }
+
+      t_out = (double*)Realloc(t_out,new_size,double);
+      S_out = (int*)Realloc(t_out,new_size,int);
+      E_out = (int*)Realloc(t_out,new_size,int);
+      I_out = (int*)Realloc(t_out,new_size,int);
+      R_out = (int*)Realloc(t_out,new_size,int);
+
+      out_size = new_size;
+
+    }
+
+  }
+  // end simulation loop
+
+  if(verbose){
+    Rprintf(" --- ending simulation --- \n");
   }
 
+  SEXP out = PROTECT(Rf_allocVector(VECSXP,5));
+
+  SEXP t_2R = PROTECT(Rf_allocVector(REALSXP,out_i-1));
+  memmove(REAL(t_2R),t_out,(out_i-1) * sizeof(double));
+
+  SEXP S_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+  memmove(INTEGER(S_2R),S_out,(out_i-1) * sizeof(int));
+
+  SEXP E_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+  memmove(INTEGER(E_2R),E_out,(out_i-1) * sizeof(int));
+
+  SEXP I_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+  memmove(INTEGER(I_2R),I_out,(out_i-1) * sizeof(int));
+
+  SEXP R_2R = PROTECT(Rf_allocVector(INTSXP,out_i-1));
+  memmove(INTEGER(R_2R),R_out,(out_i-1) * sizeof(int));
+
+  SET_VECTOR_ELT(out,0,t_2R);
+  SET_VECTOR_ELT(out,1,S_2R);
+  SET_VECTOR_ELT(out,2,E_2R);
+  SET_VECTOR_ELT(out,3,I_2R);
+  SET_VECTOR_ELT(out,4,R_2R);
+
+  SEXP names = PROTECT(Rf_allocVector(STRSXP,5));
+  SET_STRING_ELT(names,0,Rf_mkChar("time"));
+  SET_STRING_ELT(names,1,Rf_mkChar("S"));
+  SET_STRING_ELT(names,2,Rf_mkChar("E"));
+  SET_STRING_ELT(names,3,Rf_mkChar("I"));
+  SET_STRING_ELT(names,4,Rf_mkChar("R"));
+
+  Rf_namesgets(out,names);
+
+  PutRNGstate();
+
+  deleteMinHeap(&sk[0]);
+  deleteMinHeap(&sk[1]);
+
+  UNPROTECT(7);
+
+  Free(t_out);
+  Free(S_out);
+  Free(E_out);
+  Free(I_out);
+  Free(R_out);
+
+  return out;
 
 };
