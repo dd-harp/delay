@@ -59,7 +59,7 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
 
   double t = 0.;
 
-  int out_size = 1E4;
+  int out_size = 8E4;
   int out_i = 0;
 
   double* t_out = (double*)Calloc(out_size,double);
