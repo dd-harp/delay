@@ -14,6 +14,7 @@
 // comparison of floats
 #include "fcmp.h"
 
+// out <- SEIRdelay_BD_MNRM_C(tmax = 1e3,S0 = 1000,I0 = 5,beta = 0.001,nu = 1/5,tau = 10,mu = 1/50,verbose = TRUE)
 
 /* --------------------------------------------------------------------------------
 #   SEIR w/delay and demographics via Anderson's method
@@ -109,6 +110,8 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
   ak[5] = mu * (double)X[2];                  // (death of I)
   ak[6] = mu * (double)X[3];                  // (death of R)
 
+  // Rprintf(" --- initial propensities ak[0] %f, ak[1] %f, ak[2] %f, ak[3] %f, ak[4] %f,ak[5] %f, ak[6] %f --- \n",ak[0],ak[1],ak[2],ak[3],ak[4],ak[5],ak[6]);
+
   // 3. draw internal jump times
   for(int i=0; i<7; i++){
     Pk[i] = log(1./runif(0.,1.));
@@ -124,6 +127,8 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
   }
 
   while(t < tmax){
+
+    // Rprintf(" --- simulation iteration %d, time %f --- \n",out_i,t);
 
     if(verbose){
       if(out_i % 100 == 0){
@@ -167,6 +172,8 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
 
     // 6. set t+= Delta
     t += Delta;
+
+    // Rprintf(" --- reaction %d fired, completion? %d --- \n",j,completion);
 
     // 7 - 10. reaction updating
     if(completion){
@@ -259,11 +266,14 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
     double p_surv = exp(-mu*tau);
     ak[0] = lambda * p_surv;            // (infection followed by completion of infectivity)
     ak[1] = lambda * (1. - p_surv);     // (infection followed by death)
-    ak[2] = nu*(double)X[2];            // (recovery)
+    ak[2] = nu * (double)X[2];            // (recovery)
     ak[3] = mu * (double)(X[0]+X[1]+X[2]+X[3]); // (birth)
     ak[4] = mu * (double)X[0];                  // (death of S)
     ak[5] = mu * (double)X[2];                  // (death of I)
     ak[6] = mu * (double)X[3];                  // (death of R)
+
+    // Rprintf(" --- recalculate propensities ak[0] %f, ak[1] %f, ak[2] %f, ak[3] %f, ak[4] %f,ak[5] %f, ak[6] %f --- \n",ak[0],ak[1],ak[2],ak[3],ak[4],ak[5],ak[6]);
+
 
     // store output
     t_out[out_i] = t;
@@ -275,7 +285,7 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
 
     // various conditions to return early
     if(out_i > maxsize){
-      Rprintf(" --- warning: exceeded maximum output size, returning output early --- \n");
+      // Rprintf(" --- warning: exceeded maximum output size, returning output early --- \n");
 
       SEXP out = PROTECT(Rf_allocVector(VECSXP,5));
 
@@ -328,11 +338,11 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
     int all_zero = 1;
     for(int i=0; i<7; i++){
       if(i < 2){
-        if((ak[i] < 1.E-9) && (sk[i].elem->data == DBL_MAX)){
+        if((ak[i] > 1.E-9) || (sk[i].elem->data < DBL_MAX)){
           all_zero = 0;
         }
       } else {
-        if(ak[i] < 1.E-9){
+        if(ak[i] > 1.E-9){
           all_zero = 0;
         }
       }
@@ -388,7 +398,7 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
       return out;
 
     }
-    if(out_i > out_size){
+    if(out_i >= out_size){
       if(verbose){
         Rprintf(" --- extending output memory --- \n");
       }
@@ -398,11 +408,83 @@ SEXP SEIRdelay_BD_MNRM_Cinternal(
         new_size = maxsize - out_size;
       }
 
-      t_out = (double*)Realloc(t_out,new_size,double);
-      S_out = (int*)Realloc(t_out,new_size,int);
-      E_out = (int*)Realloc(t_out,new_size,int);
-      I_out = (int*)Realloc(t_out,new_size,int);
-      R_out = (int*)Realloc(t_out,new_size,int);
+      // Rprintf(" --- NEW SIZE %d --- \n",new_size);
+
+      double* t_out_new = (double*)Realloc(t_out,new_size,double);
+      int* S_out_new = (int*)Realloc(S_out,new_size,int);
+      int* E_out_new = (int*)Realloc(E_out,new_size,int);
+      int* I_out_new = (int*)Realloc(I_out,new_size,int);
+      int* R_out_new = (int*)Realloc(R_out,new_size,int);
+
+      if(t_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        t_out = t_out_new;
+      }
+
+      if(S_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        S_out = S_out_new;
+      }
+
+      if(E_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        E_out = E_out_new;
+      }
+
+      if(I_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        I_out = I_out_new;
+      }
+
+      if(R_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        R_out = R_out_new;
+      }
 
       out_size = new_size;
 

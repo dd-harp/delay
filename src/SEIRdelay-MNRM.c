@@ -298,7 +298,7 @@ SEXP SEIRdelay_MNRM_Cinternal(
       return out;
 
     }
-    if(out_i > out_size){
+    if(out_i >= out_size){
       if(verbose){
         Rprintf(" --- extending output memory --- \n");
       }
@@ -308,11 +308,83 @@ SEXP SEIRdelay_MNRM_Cinternal(
         new_size = maxsize - out_size;
       }
 
-      t_out = (double*)Realloc(t_out,new_size,double);
-      S_out = (int*)Realloc(t_out,new_size,int);
-      E_out = (int*)Realloc(t_out,new_size,int);
-      I_out = (int*)Realloc(t_out,new_size,int);
-      R_out = (int*)Realloc(t_out,new_size,int);
+      // Rprintf(" --- NEW SIZE %d --- \n",new_size);
+
+      double* t_out_new = (double*)Realloc(t_out,new_size,double);
+      int* S_out_new = (int*)Realloc(S_out,new_size,int);
+      int* E_out_new = (int*)Realloc(E_out,new_size,int);
+      int* I_out_new = (int*)Realloc(I_out,new_size,int);
+      int* R_out_new = (int*)Realloc(R_out,new_size,int);
+
+      if(t_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        t_out = t_out_new;
+      }
+
+      if(S_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        S_out = S_out_new;
+      }
+
+      if(E_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        E_out = E_out_new;
+      }
+
+      if(I_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        I_out = I_out_new;
+      }
+
+      if(R_out_new == NULL){
+
+        Rprintf(" --- ERROR: REALLOCATION FAILURE, ABORTING SIMULATION --- \n");
+        Free(t_out);
+        Free(S_out);
+        Free(E_out);
+        Free(I_out);
+        Free(R_out);
+        return R_NilValue;
+
+      } else {
+        R_out = R_out_new;
+      }
 
       out_size = new_size;
 
