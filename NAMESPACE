@@ -3,4 +3,6 @@
 export(SEIRdelay_MNRM)
 export(SEIRdelay_MNRM_C)
 export(discretise)
+export(discretiseR)
 useDynLib(delay,SEIRdelay_MNRM_Cinternal)
+useDynLib(delay,discretize_C)
