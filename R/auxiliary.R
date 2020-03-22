@@ -1,10 +1,12 @@
+# -------------------------------------------------------------------------------- #
+#
+#   Discretize continuous-time output
+#   Sean Wu (slwu89@berkeley.edu)
+#   January 2020
+#
+# -------------------------------------------------------------------------------- #
 
-
-
-
-
-
-#' Discretise Output
+#' Discretize Output
 #'
 #' Modified from \code{smfsb} package
 #'
@@ -13,40 +15,7 @@
 #'
 #' @useDynLib delay discretize_C
 #' @export
-discretise <- function(out, dt=1){
+discretize <- function(out, dt=1){
   storage.mode(out) <- "double"
   .Call(discretize_C,as.matrix(out),as.numeric(dt))
 }
-
-
-# #' Discretise Output
-# #'
-# #' Modified from \code{smfsb} package
-# #'
-# #' @param out a matrix
-# #' @param out dt the discretization lattice
-# #'
-# #' @export
-# discretiseR <- function(out, dt=1){
-#
-#   events <- nrow(out)
-#   end <- out[events,"time"]
-#   start <- out[1,"time"]
-#
-#   len <- (end-start)%/%dt+1
-#   x <- matrix(nrow=len,ncol=ncol(out))
-#   target <- 0
-#   j <- 1
-#
-#   for(i in 2:events){
-#     while(out[i,"time"] >= target){
-#       x[j,-1] <- out[i,-1]
-#       x[j,1] <- target
-#       j <- j + 1
-#       target <- target + dt
-#     }
-#   }
-#
-#   storage.mode(x) <- "integer"
-#   return(x)
-# }

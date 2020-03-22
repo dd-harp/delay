@@ -57,7 +57,7 @@ fequal <- function(x,y,tol=sqrt(.Machine$double.eps)){
 #' @examples
 #'  \dontrun{
 #'    out <- SEIRdelay_MNRM_C(tmax = 1e3,S0 = 1000,I0 = 5,beta = 0.001,nu = 1/5,tau = 10,verbose = TRUE)
-#'    outd <- discretise(out)
+#'    outd <- discretize(out)
 #'    matplot(outd[,-1],type="l",col=c("blue","orange","red","purple"),lwd=1.5,lty=1,ylab="Count",xlab="Days")
 #'    legend(x = "topleft",pch=rep(16,4),col=c("blue","orange","red","purple"),legend=c("S","E","I","R"))
 #' }
@@ -97,7 +97,7 @@ SEIRdelay_MNRM_C <- function(tmax,S0,I0,beta,nu,tau,verbose=T,maxsize=1e6){
 #' @examples
 #'  \dontrun{
 #'    out <- SEIRdelay_MNRM(tmax = 1e3,S0 = 1000,I0 = 5,beta = 0.001,nu = 1/5,tau = 10,verbose = TRUE)
-#'    outd <- discretise(out)
+#'    outd <- discretize(out)
 #'    matplot(outd[,-1],type="l",col=c("blue","orange","red","purple"),lwd=1.5,lty=1,ylab="Count",xlab="Days")
 #'    legend(x = "topleft",pch=rep(16,4),col=c("blue","orange","red","purple"),legend=c("S","E","I","R"))
 #' }
