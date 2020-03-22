@@ -47,7 +47,7 @@ The MNRM is described in: Anderson, D. F. (2007). \emph{A modified next reaction
 }
 \examples{
  \dontrun{
-   out <- SEIRdelay_MNRM_C(tmax = 1e3,S0 = 1000,I0 = 5,beta = 0.001,nu = 1/5,tau = 10,verbose = TRUE)
+   out <- SEIRdelay_BD_MNRM_C(tmax = 1e3,S0 = 1000,I0 = 5,beta = 0.001,nu = 1/5,tau = 10,mu = 1/50,verbose = TRUE)
    outd <- discretize(out)
    matplot(outd[,-1],type="l",col=c("blue","orange","red","purple"),lwd=1.5,lty=1,ylab="Count",xlab="Days")
    legend(x = "topleft",pch=rep(16,4),col=c("blue","orange","red","purple"),legend=c("S","E","I","R"))
